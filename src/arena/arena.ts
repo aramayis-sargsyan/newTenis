@@ -1,9 +1,8 @@
-import { Container, Graphics, LineStyle } from "pixi.js";
+import { Container } from "pixi.js";
 import { Cell } from "./cell";
-import { Row } from "./pathLine";
 import { ArenaConfig } from "../config";
 import { Ball } from "./ball";
-import { checkWorldBounds } from "./arena-utills";
+import { checkWorldBounds, ballCell, checkCellBounds } from "./arena-utills";
 
 export class Arena extends Container {
   ball: Ball;
@@ -51,10 +50,11 @@ export class Arena extends Container {
     );
     this.addChild(this.cell);
     document.addEventListener("keydown", this.onKeyDown.bind(this));
+    document.addEventListener("keyup", this.onKeyUp.bind(this));
   }
 
   moveBall() {
-    const { board_height: cell_height, ball_radius } = ArenaConfig;
+    const { cell_width, cell_height, ball_radius } = ArenaConfig;
     this.ball.position.set(
       (this.ball.position.x += this.ball.velocity.x),
       (this.ball.position.y += this.ball.velocity.y)
@@ -65,14 +65,60 @@ export class Arena extends Container {
     }
 
     checkWorldBounds(this.ball);
+
+    if (
+      ballCell(
+        this.ball.position.x,
+        this.ball.position.y,
+        ball_radius,
+        this.cell.position.x - cell_width / 2,
+        this.cell.position.y - cell_height / 2,
+        cell_width,
+        cell_height
+      )
+    ) {
+      checkCellBounds(this.ball, this.cell);
+    }
   }
 
   onKeyDown(key) {
-    if (key.keyCode === 68 || key.keyCode === 39) {
-      this.cell.position.x += 2;
+    const { board_width, board_lineStyle, cell_move } = ArenaConfig;
+    this.cell.velocity = cell_move;
+
+    if (
+      (key.keyCode === 68 || key.keyCode === 39) &&
+      this.cell.position.x <=
+        (window.innerWidth + board_width) / 2 -
+          board_lineStyle -
+          this.cell.width / 2 -
+          cell_move
+    ) {
+      this.cell.position.x += cell_move;
+    } else if (key.keyCode === 68 || key.keyCode === 39) {
+      this.cell.position.x =
+        (window.innerWidth + board_width) / 2 -
+        board_lineStyle -
+        this.cell.width / 2;
     }
-    if (key.keyCode === 65 || key.keyCode === 37) {
-      this.cell.position.x -= 2;
+
+    if (
+      (key.keyCode === 65 || key.keyCode === 37) &&
+      this.cell.position.x >=
+        (window.innerWidth - board_width) / 2 +
+          board_lineStyle +
+          this.cell.width / 2 +
+          cell_move
+    ) {
+      this.cell.position.x -= cell_move;
+    } else if (key.keyCode === 65 || key.keyCode === 37) {
+      this.cell.position.x =
+        (window.innerWidth - board_width) / 2 +
+        board_lineStyle +
+        this.cell.width / 2;
     }
+  }
+  onKeyUp() {
+    this.cell.velocity = 0;
+    console.warn(45);
   }
 }

@@ -17,8 +17,8 @@ export class Ball extends Graphics {
 
   setVelosity() {
     this.velocity = {
-      x: 0,
-      y: 0,
+      x: 1,
+      y: 1,
     };
   }
 }

@@ -1,7 +1,7 @@
 import { Graphics } from "pixi.js";
-import { ArenaConfig } from "../config";
 
 export class Cell extends Graphics {
+  velocity: number;
   constructor() {
     super();
   }
@@ -13,5 +13,6 @@ export class Cell extends Graphics {
     this.drawRect(0, 0, width - 2 * lineStyle, height - 2 * lineStyle);
     this.endFill();
     this.pivot.set(this.width / 2, this.height / 2);
+    this.velocity = 0;
   }
 }
