@@ -2,16 +2,25 @@ import { Container } from "pixi.js";
 import { Cell } from "./cell";
 import { ArenaConfig } from "../config";
 import { Ball } from "./ball";
-import { checkWorldBounds, ballCell, checkCellBounds } from "./arena-utills";
+import {
+  checkWorldBounds,
+  ballCell,
+  checkYourCellBounds,
+  checkBotCellBounds,
+  moveYourCell,
+  moveBotCell,
+} from "./arena-check-bounds";
 
 export class Arena extends Container {
   ball: Ball;
-  cell: Cell;
+  yourCell: Cell;
+  botCell: Cell;
   wall: Cell;
   mouseStart: { x: number; y: number };
   mouseEnd: { x: number; y: number };
   endCordinate: { x: number; y: number };
   count: number;
+  yourKeyDoun: boolean;
   constructor() {
     super();
     this.mouseStart = {
@@ -39,86 +48,166 @@ export class Arena extends Container {
     this.addChild(this.ball);
   }
 
-  buildCell() {
+  buildYourCell() {
     const { cell_width, cell_height, board_lineStyle } = ArenaConfig;
 
-    this.cell = new Cell();
-    this.cell._build(cell_width, cell_height, 0);
-    this.cell.position.set(
+    this.yourCell = new Cell();
+    this.yourCell._build(cell_width, cell_height, 0);
+    this.yourCell.position.set(
       window.innerWidth / 2,
       window.innerHeight - board_lineStyle - cell_height / 2
     );
-    this.addChild(this.cell);
-    document.addEventListener("keydown", this.onKeyDown.bind(this));
+    this.addChild(this.yourCell);
+
+    document.addEventListener("keydown", this.onYourKeyDown.bind(this));
+    document.addEventListener("keydown", this.onBotKeyDown.bind(this));
     document.addEventListener("keyup", this.onKeyUp.bind(this));
   }
 
+  buildBotCell() {
+    const { cell_width, cell_height, board_lineStyle, board_height } =
+      ArenaConfig;
+
+    this.botCell = new Cell();
+    this.botCell._build(cell_width, cell_height, 0);
+    this.botCell.position.set(
+      window.innerWidth / 2,
+      window.innerHeight - board_height + board_lineStyle + cell_height / 2
+    );
+    this.addChild(this.botCell);
+  }
+
+  checkLoseBounds() {
+    const { board_lineStyle: cell_lineStyle, board_height: board_height } =
+      ArenaConfig;
+
+    if (
+      this.ball.position.y >=
+      window.innerHeight - this.ball.height / 2 - cell_lineStyle
+    ) {
+      this.ball.position.set(
+        window.innerWidth / 2,
+        window.innerHeight - board_height / 2
+      );
+      this.ball.velocity.y = -Math.abs(this.ball.velocity.y);
+      this.botCell.position.x = window.innerWidth / 2;
+
+      this.emit("loseYou", "you");
+    } else if (
+      this.ball.position.y <=
+      window.innerHeight - board_height + this.ball.width / 2 + cell_lineStyle
+    ) {
+      this.ball.position.set(
+        window.innerWidth / 2,
+        window.innerHeight - board_height / 2
+      );
+      this.ball.velocity.y = Math.abs(this.ball.velocity.y);
+      this.botCell.position.x = window.innerWidth / 2;
+
+      this.emit("loseBot", "Bot");
+    }
+  }
+
   moveBall() {
-    const { cell_width, cell_height, ball_radius } = ArenaConfig;
+    const {
+      cell_width,
+      cell_height,
+      ball_radius,
+      ball_velocity,
+      board_width,
+      board_lineStyle,
+      start_bot,
+    } = ArenaConfig;
+
     this.ball.position.set(
       (this.ball.position.x += this.ball.velocity.x),
       (this.ball.position.y += this.ball.velocity.y)
     );
 
+    if (this.yourKeyDoun) {
+      moveYourCell(this.yourKeyDoun, this.yourCell, 37, 39);
+      moveBotCell(this.yourKeyDoun, this.botCell, 65, 68);
+    }
+
+    if (start_bot) {
+      if (this.ball.position.x >= this.botCell.position.x) {
+        this.botCell.position.x += Math.abs(this.ball.velocity.x) * 0.9;
+      } else {
+        this.botCell.position.x -= Math.abs(this.ball.velocity.x) * 0.9;
+      }
+
+      // else if (
+      //   this.ball.position.x <
+      //   (window.innerWidth - board_width) / 2 +
+      //     board_lineStyle +
+      //     this.botCell.width / 2
+      // ) {
+      //   this.botCell.position.x =
+      //     (window.innerWidth - board_width) / 2 +
+      //     board_lineStyle +
+      //     this.botCell.width / 2;
+      // } else {
+      //   this.botCell.position.x =
+      //     (window.innerWidth + board_width) / 2 -
+      //     board_lineStyle -
+      //     this.botCell.width / 2;
+      // }
+      // if (this.ball.position.x > this.botCell.position.x) {
+      //   this.botCell.position.x += Math.abs(this.ball.velocity.x) * 1;
+      // } else {
+      //   this.botCell.position.x -= Math.abs(this.ball.velocity.x) * 1;
+      // }
+    }
+
     if (this.ball.position.y === window.innerHeight - cell_height / 2) {
       this.count = 1;
     }
-
+    this.checkLoseBounds();
     checkWorldBounds(this.ball);
+
+    this.ball.velocity.x =
+      (this.ball.velocity.x / Math.abs(this.ball.velocity.x)) * ball_velocity.x;
 
     if (
       ballCell(
         this.ball.position.x,
         this.ball.position.y,
         ball_radius,
-        this.cell.position.x - cell_width / 2,
-        this.cell.position.y - cell_height / 2,
+        this.yourCell.position.x - cell_width / 2,
+        this.yourCell.position.y - cell_height / 2,
         cell_width,
         cell_height
       )
     ) {
-      checkCellBounds(this.ball, this.cell);
+      checkYourCellBounds(this.ball, this.yourCell);
+    }
+
+    if (
+      ballCell(
+        this.ball.position.x,
+        this.ball.position.y,
+        ball_radius,
+        this.botCell.position.x - cell_width / 2,
+        this.botCell.position.y - cell_height / 2,
+        cell_width,
+        cell_height
+      )
+    ) {
+      checkBotCellBounds(this.ball, this.botCell);
     }
   }
 
-  onKeyDown(key) {
-    const { board_width, board_lineStyle, cell_move } = ArenaConfig;
-    this.cell.velocity = cell_move;
-
-    if (
-      (key.keyCode === 68 || key.keyCode === 39) &&
-      this.cell.position.x <=
-        (window.innerWidth + board_width) / 2 -
-          board_lineStyle -
-          this.cell.width / 2 -
-          cell_move
-    ) {
-      this.cell.position.x += cell_move;
-    } else if (key.keyCode === 68 || key.keyCode === 39) {
-      this.cell.position.x =
-        (window.innerWidth + board_width) / 2 -
-        board_lineStyle -
-        this.cell.width / 2;
-    }
-
-    if (
-      (key.keyCode === 65 || key.keyCode === 37) &&
-      this.cell.position.x >=
-        (window.innerWidth - board_width) / 2 +
-          board_lineStyle +
-          this.cell.width / 2 +
-          cell_move
-    ) {
-      this.cell.position.x -= cell_move;
-    } else if (key.keyCode === 65 || key.keyCode === 37) {
-      this.cell.position.x =
-        (window.innerWidth - board_width) / 2 +
-        board_lineStyle +
-        this.cell.width / 2;
+  onYourKeyDown(key) {
+    this.yourKeyDoun = key;
+  }
+  onBotKeyDown(key) {
+    const { start_bot } = ArenaConfig;
+    if (!start_bot) {
+      this.yourKeyDoun = key;
     }
   }
   onKeyUp() {
-    this.cell.velocity = 0;
-    console.warn(45);
+    this.yourCell.velocity = 0;
+    this.yourKeyDoun = false;
   }
 }

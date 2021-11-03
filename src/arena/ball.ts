@@ -16,9 +16,11 @@ export class Ball extends Graphics {
   }
 
   setVelosity() {
+    const { ball_velocity } = ArenaConfig;
+
     this.velocity = {
-      x: 1,
-      y: 1,
+      x: ball_velocity.x,
+      y: ball_velocity.y,
     };
   }
 }
