@@ -20,7 +20,7 @@ export class Ball extends Graphics {
 
     this.velocity = {
       x: ball_velocity.x,
-      y: ball_velocity.y,
+      y: 0,
     };
   }
 }

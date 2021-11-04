@@ -4,21 +4,20 @@ export class Score extends Container {
   highScore: number;
   yourScore: number;
   style: TextStyle;
+  textYou: Text;
+  textBot: Text;
+  textWin: Text;
   constructor() {
     super();
 
     this.style = new TextStyle({
       fontFamily: "Arial",
-      fontSize: 18,
+      fontSize: 20,
       fontStyle: "italic",
       fontWeight: "bold",
       fill: ["#ffffff", "#666666"],
       strokeThickness: 5,
-      dropShadow: true,
       dropShadowColor: "#000000",
-      dropShadowBlur: 4,
-      dropShadowAngle: Math.PI / 6,
-      dropShadowDistance: 6,
       wordWrap: true,
       wordWrapWidth: 440,
       lineJoin: "round",
@@ -32,18 +31,20 @@ export class Score extends Container {
   }
 
   getYourScore(score) {
-    let text = new Text(`Your score ${score}`, this.style);
-    text.pivot.x = text.width / 2;
-    text.pivot.y = text.height / 2;
-    text.position.set(0, 0);
-    this.addChild(text);
+    this.textYou = new Text(`${score}`, this.style);
+    this.textYou.position.set(0, 0);
+    this.addChild(this.textYou);
   }
 
-  getHighScore(score) {
-    let textObj = new Text(`Bot score ${score}`, this.style);
-    textObj.pivot.x = textObj.width / 2;
-    textObj.pivot.y = textObj.height / 2;
-    textObj.position.set(0, 50);
-    this.addChild(textObj);
+  getBotScore(score) {
+    this.textBot = new Text(`${score}`, this.style);
+    this.textBot.position.set(250, 0);
+    this.addChild(this.textBot);
+  }
+
+  getWin(win_los) {
+    this.textWin = new Text(` ${win_los}`, this.style);
+    this.textWin.position.set(250, 0);
+    this.addChild(this.textWin);
   }
 }

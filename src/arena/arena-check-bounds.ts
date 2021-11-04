@@ -25,66 +25,49 @@ export const ballCell = (xc, yc, rc, xb, yb, wb, hb) => {
   return boxCircle(xb, yb, wb, hb, xc, yc, rc);
 };
 
-export const checkYourCellBounds = (ball, cell) => {
+export const checkCellBounds = (ball, cell, simbol) => {
+  console.log(ball.position.x - ball.width / 2);
+  console.log(
+    cell.position.x + cell.width / 2 - cell.velocity - Math.abs(ball.velocity.x)
+  );
+
   if (
-    ball.position.y + ball.width / 2 <=
-      cell.position.y - cell.height / 2 + Math.abs(ball.velocity.y) &&
+    simbol * (ball.position.y + simbol * (ball.width / 2)) <=
+      simbol *
+        (cell.position.y -
+          (simbol * cell.height) / 2 +
+          simbol * Math.abs(ball.velocity.y)) &&
     ball.position.x - ball.width / 2 <=
       cell.position.x + cell.width / 2 + cell.velocity &&
     ball.position.x + ball.width / 2 >=
       cell.position.x - cell.width / 2 - cell.velocity
   ) {
+    console.log(1);
+
     ball.velocity.y *= -1;
   } else if (
     ball.position.x - ball.width / 2 >=
-    cell.position.x + cell.width / 2 - cell.velocity + ball.velocity.x
+    cell.position.x + cell.width / 2 - cell.velocity - Math.abs(ball.velocity.x)
   ) {
     ball.velocity.x = Math.abs(ball.velocity.x) + cell.velocity;
   } else if (
     ball.position.x + ball.width / 2 <=
-    cell.position.x - cell.width / 2 + cell.velocity + ball.velocity.x
+    cell.position.x - cell.width / 2 + cell.velocity + Math.abs(ball.velocity.x)
   ) {
     ball.velocity.x = (Math.abs(ball.velocity.x) + cell.velocity) * -1;
   } else if (ball.position.x > cell.position.x) {
+    console.log(4);
+
     ball.velocity.x = Math.abs(ball.velocity.x) + cell.velocity;
-    ball.velocity.y = -Math.abs(ball.velocity.y);
+    ball.velocity.y = -simbol * Math.abs(ball.velocity.y);
   } else {
+    console.log(5);
+
     ball.velocity.x = -Math.abs(ball.velocity.x) - cell.velocity;
-    ball.velocity.y = -Math.abs(ball.velocity.y);
+    ball.velocity.y = -simbol * Math.abs(ball.velocity.y);
   }
 };
 
-export const checkBotCellBounds = (ball, cell) => {
-  ball.velocity.y = Math.abs(ball.velocity.y);
-  // console.log(ball.position.x - ball.width / 2);
-  // console.log(cell.position.x + cell.width / 2 + cell.velocity);
-  // if (
-  //   ball.position.y + ball.width / 2 <=
-  //     cell.position.y - cell.height / 2 + Math.abs(ball.velocity.y) &&
-  //   ball.position.x - ball.width / 2 <=
-  //     cell.position.x + cell.width / 2 + cell.velocity &&
-  //   ball.position.x + ball.width / 2 >=
-  //     cell.position.x - cell.width / 2 - cell.velocity
-  // ) {
-  //   ball.velocity.y *= -1;
-  // } else if (
-  //   ball.position.x - ball.width / 2 >=
-  //   cell.position.x + cell.width / 2 - cell.velocity + ball.velocity.x
-  // ) {
-  //   ball.velocity.x = Math.abs(ball.velocity.x) + cell.velocity;
-  // } else if (
-  //   ball.position.x + ball.width / 2 <=
-  //   cell.position.x - cell.width / 2 + cell.velocity + ball.velocity.x
-  // ) {
-  //   ball.velocity.x = (Math.abs(ball.velocity.x) + cell.velocity) * -1;
-  // } else if (ball.position.x > cell.position.x) {
-  //   ball.velocity.x = Math.abs(ball.velocity.x) + cell.velocity;
-  //   ball.velocity.y = -Math.abs(ball.velocity.y);
-  // } else {
-  //   ball.velocity.x = -Math.abs(ball.velocity.x) - cell.velocity;
-  //   ball.velocity.y = -Math.abs(ball.velocity.y);
-  // }
-};
 export const moveYourCell = (key, yourCell, left, right) => {
   const { board_width, board_lineStyle, cell_move } = ArenaConfig;
   yourCell.velocity = cell_move;
@@ -124,7 +107,6 @@ export const moveYourCell = (key, yourCell, left, right) => {
 
 export const moveBotCell = (key, yourCell, left, right) => {
   const { board_width, board_lineStyle, cell_move } = ArenaConfig;
-  yourCell.velocity = cell_move;
 
   if (
     key.keyCode === right &&

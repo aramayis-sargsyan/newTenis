@@ -5,8 +5,7 @@ import { Ball } from "./ball";
 import {
   checkWorldBounds,
   ballCell,
-  checkYourCellBounds,
-  checkBotCellBounds,
+  checkCellBounds,
   moveYourCell,
   moveBotCell,
 } from "./arena-check-bounds";
@@ -21,6 +20,7 @@ export class Arena extends Container {
   endCordinate: { x: number; y: number };
   count: number;
   yourKeyDoun: boolean;
+  start: string;
   constructor() {
     super();
     this.mouseStart = {
@@ -32,6 +32,7 @@ export class Arena extends Container {
       y: 0,
     };
     this.count = 1;
+    this.start = "bot";
   }
 
   buildBall() {
@@ -90,9 +91,11 @@ export class Arena extends Container {
         window.innerHeight - board_height / 2
       );
       this.ball.velocity.y = -Math.abs(this.ball.velocity.y);
-      this.botCell.position.x = window.innerWidth / 2;
+      if (this.start === "bot") {
+        this.botCell.position.x = window.innerWidth / 2;
+      }
 
-      this.emit("loseYou", "you");
+      this.emit("loseBot", "you");
     } else if (
       this.ball.position.y <=
       window.innerHeight - board_height + this.ball.width / 2 + cell_lineStyle
@@ -102,9 +105,10 @@ export class Arena extends Container {
         window.innerHeight - board_height / 2
       );
       this.ball.velocity.y = Math.abs(this.ball.velocity.y);
-      this.botCell.position.x = window.innerWidth / 2;
-
-      this.emit("loseBot", "Bot");
+      if (this.start === "bot") {
+        this.botCell.position.x = window.innerWidth / 2;
+      }
+      this.emit("loseYou", "Bot");
     }
   }
 
@@ -116,7 +120,7 @@ export class Arena extends Container {
       ball_velocity,
       board_width,
       board_lineStyle,
-      start_bot,
+      cell_move,
     } = ArenaConfig;
 
     this.ball.position.set(
@@ -125,45 +129,57 @@ export class Arena extends Container {
     );
 
     if (this.yourKeyDoun) {
+      if (this.start === "you") {
+        moveBotCell(this.yourKeyDoun, this.botCell, 65, 68);
+      }
       moveYourCell(this.yourKeyDoun, this.yourCell, 37, 39);
-      moveBotCell(this.yourKeyDoun, this.botCell, 65, 68);
     }
 
-    if (start_bot) {
-      if (this.ball.position.x >= this.botCell.position.x) {
-        this.botCell.position.x += Math.abs(this.ball.velocity.x) * 0.9;
-      } else {
-        this.botCell.position.x -= Math.abs(this.ball.velocity.x) * 0.9;
+    if (this.start === "bot") {
+      if (
+        this.ball.position.x >= this.botCell.position.x &&
+        this.ball.velocity.y < 0
+      ) {
+        if (
+          this.botCell.position.x <
+          (window.innerWidth + board_width) / 2 -
+            board_lineStyle -
+            this.botCell.width / 2 -
+            cell_move
+        ) {
+          this.botCell.position.x += Math.abs(this.ball.velocity.x) * 0.9;
+        } else {
+          this.botCell.position.x =
+            (window.innerWidth + board_width) / 2 -
+            board_lineStyle -
+            this.botCell.width / 2;
+        }
+      } else if (
+        this.ball.position.x < this.botCell.position.x &&
+        this.ball.velocity.y < 0
+      ) {
+        if (
+          this.botCell.position.x >
+          (window.innerWidth - board_width) / 2 +
+            board_lineStyle +
+            this.botCell.width / 2 +
+            cell_move
+        ) {
+          this.botCell.position.x -= Math.abs(this.ball.velocity.x) * 0.9;
+        } else {
+          this.botCell.position.x =
+            (window.innerWidth - board_width) / 2 +
+            board_lineStyle +
+            this.botCell.width / 2;
+        }
       }
-
-      // else if (
-      //   this.ball.position.x <
-      //   (window.innerWidth - board_width) / 2 +
-      //     board_lineStyle +
-      //     this.botCell.width / 2
-      // ) {
-      //   this.botCell.position.x =
-      //     (window.innerWidth - board_width) / 2 +
-      //     board_lineStyle +
-      //     this.botCell.width / 2;
-      // } else {
-      //   this.botCell.position.x =
-      //     (window.innerWidth + board_width) / 2 -
-      //     board_lineStyle -
-      //     this.botCell.width / 2;
-      // }
-      // if (this.ball.position.x > this.botCell.position.x) {
-      //   this.botCell.position.x += Math.abs(this.ball.velocity.x) * 1;
-      // } else {
-      //   this.botCell.position.x -= Math.abs(this.ball.velocity.x) * 1;
-      // }
     }
 
     if (this.ball.position.y === window.innerHeight - cell_height / 2) {
       this.count = 1;
     }
-    this.checkLoseBounds();
     checkWorldBounds(this.ball);
+    this.checkLoseBounds();
 
     this.ball.velocity.x =
       (this.ball.velocity.x / Math.abs(this.ball.velocity.x)) * ball_velocity.x;
@@ -179,7 +195,7 @@ export class Arena extends Container {
         cell_height
       )
     ) {
-      checkYourCellBounds(this.ball, this.yourCell);
+      checkCellBounds(this.ball, this.yourCell, 1);
     }
 
     if (
@@ -193,7 +209,7 @@ export class Arena extends Container {
         cell_height
       )
     ) {
-      checkBotCellBounds(this.ball, this.botCell);
+      checkCellBounds(this.ball, this.botCell, -1);
     }
   }
 
@@ -201,8 +217,7 @@ export class Arena extends Container {
     this.yourKeyDoun = key;
   }
   onBotKeyDown(key) {
-    const { start_bot } = ArenaConfig;
-    if (!start_bot) {
+    if (this.start === "you") {
       this.yourKeyDoun = key;
     }
   }
