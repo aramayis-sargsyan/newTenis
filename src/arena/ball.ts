@@ -3,7 +3,7 @@ import { ArenaConfig } from "../config";
 
 export class Ball extends Graphics {
   velocity: { x: number; y: number };
-
+  const: { x: number; y: number };
   constructor() {
     super();
   }

@@ -1,4 +1,12 @@
 import { ArenaConfig } from "../config";
+import { boxCircle } from "intersects";
+
+export const moveBall = (ball) => {
+  ball.position.set(
+    (ball.position.x += ball.velocity.x),
+    (ball.position.y += ball.velocity.y)
+  );
+};
 
 export const checkWorldBounds = (ball) => {
   const {
@@ -19,18 +27,11 @@ export const checkWorldBounds = (ball) => {
   }
 };
 
-import { boxCircle } from "intersects";
-
 export const ballCell = (xc, yc, rc, xb, yb, wb, hb) => {
   return boxCircle(xb, yb, wb, hb, xc, yc, rc);
 };
 
 export const checkCellBounds = (ball, cell, simbol) => {
-  console.log(ball.position.x - ball.width / 2);
-  console.log(
-    cell.position.x + cell.width / 2 - cell.velocity - Math.abs(ball.velocity.x)
-  );
-
   if (
     simbol * (ball.position.y + simbol * (ball.width / 2)) <=
       simbol *
@@ -42,8 +43,6 @@ export const checkCellBounds = (ball, cell, simbol) => {
     ball.position.x + ball.width / 2 >=
       cell.position.x - cell.width / 2 - cell.velocity
   ) {
-    console.log(1);
-
     ball.velocity.y *= -1;
   } else if (
     ball.position.x - ball.width / 2 >=
@@ -56,87 +55,80 @@ export const checkCellBounds = (ball, cell, simbol) => {
   ) {
     ball.velocity.x = (Math.abs(ball.velocity.x) + cell.velocity) * -1;
   } else if (ball.position.x > cell.position.x) {
-    console.log(4);
-
     ball.velocity.x = Math.abs(ball.velocity.x) + cell.velocity;
     ball.velocity.y = -simbol * Math.abs(ball.velocity.y);
   } else {
-    console.log(5);
-
     ball.velocity.x = -Math.abs(ball.velocity.x) - cell.velocity;
     ball.velocity.y = -simbol * Math.abs(ball.velocity.y);
   }
 };
 
-export const moveYourCell = (key, yourCell, left, right) => {
+export const moveCell = (left, right, cell) => {
   const { board_width, board_lineStyle, cell_move } = ArenaConfig;
-  yourCell.velocity = cell_move;
+  cell.velocity = cell_move;
 
   if (
-    key.keyCode === right &&
-    yourCell.position.x <=
+    right &&
+    cell.position.x <=
       (window.innerWidth + board_width) / 2 -
         board_lineStyle -
-        yourCell.width / 2 -
+        cell.width / 2 -
         cell_move
   ) {
-    yourCell.position.x += cell_move;
-  } else if (key.keyCode === right) {
-    yourCell.position.x =
-      (window.innerWidth + board_width) / 2 -
-      board_lineStyle -
-      yourCell.width / 2;
+    cell.position.x += cell_move;
+  } else if (right) {
+    cell.position.x =
+      (window.innerWidth + board_width) / 2 - board_lineStyle - cell.width / 2;
   }
 
   if (
-    key.keyCode === left &&
-    yourCell.position.x >=
+    left &&
+    cell.position.x >=
       (window.innerWidth - board_width) / 2 +
         board_lineStyle +
-        yourCell.width / 2 +
+        cell.width / 2 +
         cell_move
   ) {
-    yourCell.position.x -= cell_move;
-  } else if (key.keyCode === left) {
-    yourCell.position.x =
-      (window.innerWidth - board_width) / 2 +
-      board_lineStyle +
-      yourCell.width / 2;
+    cell.position.x -= cell_move;
+  } else if (left) {
+    cell.position.x =
+      (window.innerWidth - board_width) / 2 + board_lineStyle + cell.width / 2;
   }
 };
 
-export const moveBotCell = (key, yourCell, left, right) => {
+export const moveBotCell = (start, ball, botCell) => {
   const { board_width, board_lineStyle, cell_move } = ArenaConfig;
-
-  if (
-    key.keyCode === right &&
-    yourCell.position.x <=
-      (window.innerWidth + board_width) / 2 -
-        board_lineStyle -
-        yourCell.width / 2 -
-        cell_move
-  ) {
-    yourCell.position.x += cell_move;
-  } else if (key.keyCode === right) {
-    yourCell.position.x =
-      (window.innerWidth + board_width) / 2 -
-      board_lineStyle -
-      yourCell.width / 2;
-  }
-
-  if (
-    key.keyCode === left &&
-    yourCell.position.x >=
-      (window.innerWidth - board_width) / 2 +
-        board_lineStyle +
-        yourCell.width / 2 +
-        cell_move
-  ) {
-    yourCell.position.x -= cell_move;
-  } else if (key.keyCode === left) {
-    yourCell.position.x =
-      (window.innerWidth - board_width) / 2 +
-      board_lineStyle +
-      yourCell.width / 2;
+  if (start === "bot") {
+    if (ball.position.x >= botCell.position.x && ball.velocity.y < 0) {
+      if (
+        botCell.position.x <
+        (window.innerWidth + board_width) / 2 -
+          board_lineStyle -
+          botCell.width / 2 -
+          cell_move
+      ) {
+        botCell.position.x += Math.abs(ball.velocity.x) * 0.9;
+      } else {
+        botCell.position.x =
+          (window.innerWidth + board_width) / 2 -
+          board_lineStyle -
+          botCell.width / 2;
+      }
+    } else if (ball.position.x < botCell.position.x && ball.velocity.y < 0) {
+      if (
+        botCell.position.x >
+        (window.innerWidth - board_width) / 2 +
+          board_lineStyle +
+          botCell.width / 2 +
+          cell_move
+      ) {
+        botCell.position.x -= Math.abs(ball.velocity.x) * 0.9;
+      } else {
+        botCell.position.x =
+          (window.innerWidth - board_width) / 2 +
+          board_lineStyle +
+          botCell.width / 2;
+      }
+    }
   }
 };

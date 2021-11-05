@@ -5,9 +5,10 @@ export const ArenaConfig = {
   ball_radius: 20,
   row_height: 2,
   cell_width: 120,
-  cell_height: 125,
+  cell_height: 10,
   cell_move: 5,
-  ball_velocity: { x: 1, y: 1 },
+  ball_velocity: { x: 5, y: 5 },
   phopap_width: 200,
   phopap_height: 400,
+  score: 10,
 };

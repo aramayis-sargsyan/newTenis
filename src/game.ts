@@ -88,14 +88,18 @@ export class Game extends PIXI.Application {
   }
 
   loseGame(e) {
-    const { board_height, board_lineStyle, cell_height } = ArenaConfig;
+    const { board_height, board_lineStyle, cell_height, score, ball_velocity } =
+      ArenaConfig;
+    console.log(ball_velocity.x);
 
+    this.arena.ball.velocity.x = ball_velocity.x;
+    this.arena.ball.velocity.y = ball_velocity.y;
     if (e === "you") {
       this.botScore += 1;
     } else {
       this.yourScore += 1;
     }
-    if (this.yourScore === 1) {
+    if (this.yourScore === score) {
       this.arena.ball.velocity.y = 0;
       this.arena.ball.position.x = window.innerWidth / 2;
       this.arena.ball.position.y = window.innerHeight - board_height / 2;
@@ -111,7 +115,7 @@ export class Game extends PIXI.Application {
         this.buildPopap("Player 1  Win");
       }
     }
-    if (this.botScore === 1) {
+    if (this.botScore === score) {
       this.arena.ball.velocity.y = 0;
       this.arena.ball.position.x = window.innerWidth / 2;
       this.arena.ball.position.y = window.innerHeight - board_height / 2;
@@ -208,6 +212,6 @@ export class Game extends PIXI.Application {
   }
 
   _update() {
-    this.arena.moveBall();
+    this.arena.move();
   }
 }

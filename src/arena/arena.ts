@@ -6,7 +6,8 @@ import {
   checkWorldBounds,
   ballCell,
   checkCellBounds,
-  moveYourCell,
+  moveCell,
+  moveBall,
   moveBotCell,
 } from "./arena-check-bounds";
 
@@ -19,7 +20,7 @@ export class Arena extends Container {
   mouseEnd: { x: number; y: number };
   endCordinate: { x: number; y: number };
   count: number;
-  yourKeyDoun: boolean;
+  yourKeyDoun: boolean[];
   start: string;
   constructor() {
     super();
@@ -33,10 +34,11 @@ export class Arena extends Container {
     };
     this.count = 1;
     this.start = "bot";
+    this.yourKeyDoun = [];
   }
 
   buildBall() {
-    const { board_height } = ArenaConfig;
+    const { board_height, ball_velocity } = ArenaConfig;
 
     this.ball = new Ball();
     this.ball.build();
@@ -44,6 +46,7 @@ export class Arena extends Container {
       window.innerWidth / 2,
       window.innerHeight - board_height / 2
     );
+    this.ball.const = ball_velocity;
     this.ball.tint = 0xff0000;
     this.ball.setVelosity();
     this.addChild(this.ball);
@@ -112,68 +115,17 @@ export class Arena extends Container {
     }
   }
 
-  moveBall() {
-    const {
-      cell_width,
-      cell_height,
-      ball_radius,
-      ball_velocity,
-      board_width,
-      board_lineStyle,
-      cell_move,
-    } = ArenaConfig;
+  move() {
+    const { cell_width, cell_height, ball_radius, ball_velocity } = ArenaConfig;
 
-    this.ball.position.set(
-      (this.ball.position.x += this.ball.velocity.x),
-      (this.ball.position.y += this.ball.velocity.y)
-    );
+    moveBall(this.ball);
 
-    if (this.yourKeyDoun) {
-      if (this.start === "you") {
-        moveBotCell(this.yourKeyDoun, this.botCell, 65, 68);
-      }
-      moveYourCell(this.yourKeyDoun, this.yourCell, 37, 39);
+    if (this.start === "you") {
+      moveCell(this.yourKeyDoun["65"], this.yourKeyDoun["68"], this.botCell);
     }
+    moveCell(this.yourKeyDoun["37"], this.yourKeyDoun["39"], this.yourCell);
 
-    if (this.start === "bot") {
-      if (
-        this.ball.position.x >= this.botCell.position.x &&
-        this.ball.velocity.y < 0
-      ) {
-        if (
-          this.botCell.position.x <
-          (window.innerWidth + board_width) / 2 -
-            board_lineStyle -
-            this.botCell.width / 2 -
-            cell_move
-        ) {
-          this.botCell.position.x += Math.abs(this.ball.velocity.x) * 0.9;
-        } else {
-          this.botCell.position.x =
-            (window.innerWidth + board_width) / 2 -
-            board_lineStyle -
-            this.botCell.width / 2;
-        }
-      } else if (
-        this.ball.position.x < this.botCell.position.x &&
-        this.ball.velocity.y < 0
-      ) {
-        if (
-          this.botCell.position.x >
-          (window.innerWidth - board_width) / 2 +
-            board_lineStyle +
-            this.botCell.width / 2 +
-            cell_move
-        ) {
-          this.botCell.position.x -= Math.abs(this.ball.velocity.x) * 0.9;
-        } else {
-          this.botCell.position.x =
-            (window.innerWidth - board_width) / 2 +
-            board_lineStyle +
-            this.botCell.width / 2;
-        }
-      }
-    }
+    moveBotCell(this.start, this.ball, this.botCell);
 
     if (this.ball.position.y === window.innerHeight - cell_height / 2) {
       this.count = 1;
@@ -182,7 +134,8 @@ export class Arena extends Container {
     this.checkLoseBounds();
 
     this.ball.velocity.x =
-      (this.ball.velocity.x / Math.abs(this.ball.velocity.x)) * ball_velocity.x;
+      (this.ball.velocity.x / Math.abs(this.ball.velocity.x)) *
+      this.ball.const.x;
 
     if (
       ballCell(
@@ -195,6 +148,7 @@ export class Arena extends Container {
         cell_height
       )
     ) {
+      console.warn(this.yourCell.velocity);
       checkCellBounds(this.ball, this.yourCell, 1);
     }
 
@@ -214,15 +168,16 @@ export class Arena extends Container {
   }
 
   onYourKeyDown(key) {
-    this.yourKeyDoun = key;
+    this.yourKeyDoun[key.keyCode] = true;
   }
   onBotKeyDown(key) {
     if (this.start === "you") {
-      this.yourKeyDoun = key;
+      this.yourKeyDoun[key.keyCode] = true;
     }
   }
-  onKeyUp() {
+  onKeyUp(key) {
     this.yourCell.velocity = 0;
-    this.yourKeyDoun = false;
+    this.botCell.velocity = 0;
+    this.yourKeyDoun[key.keyCode] = false;
   }
 }
